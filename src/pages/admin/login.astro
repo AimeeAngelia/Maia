@@ -1,0 +1,54 @@
+---
+---
+
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <title>管理员登录</title>
+</head>
+<body>
+<h1>管理员登录</h1>
+
+<div>
+    <p>请用 Google Authenticator 扫码绑定：</p>
+    <img id="qr" src="" alt="二维码" />
+</div>
+
+<form id="verify-form">
+    <input type="text" id="token" placeholder="输入验证码" />
+    <button type="submit">验证</button>
+</form>
+
+<p id="result"></p>
+
+<script type="module">
+    window.addEventListener('DOMContentLoaded', () => {
+        const qr = document.getElementById('qr') as HTMLImageElement;
+        fetch('/api/totp/generate')
+            .then((res) => res.json())
+            .then((data) => {
+                qr.src = data.qr;
+            });
+
+        const form = document.getElementById('verify-form');
+        if (!form) return;
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const tokenInput = document.getElementById('token') as HTMLInputElement;
+            if (!tokenInput) return;
+            const token = tokenInput.value;
+            const res = await fetch('/api/totp/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token }),
+            });
+            const result = await res.json();
+            const resultEl = document.getElementById('result');
+            if (resultEl) {
+                resultEl.textContent = result.success ? '✅ 验证成功' : '❌ 验证失败';
+            }
+        });
+    });
+</script>
+</body>
+</html>

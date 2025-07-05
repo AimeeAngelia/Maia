@@ -1,0 +1,15 @@
+---
+// src/pages/admin/bind.astro
+import QRCode from 'qrcode'
+const secret = 'JBSWY3DPEHPK3PXP'; // 模拟后端返回的 secret
+const otpauthUrl = `otpauth://totp/MyProject:admin1?secret=${secret}&issuer=MyProject`;
+const qrDataUrl = await QRCode.toDataURL(otpauthUrl);
+---
+<html>
+<body>
+<h1>绑定 Google Authenticator</h1>
+<p>请使用 Google Authenticator 扫描下方二维码：</p>
+<img src={qrDataUrl} alt="二维码" />
+<p>或者手动输入密钥：<code>{secret}</code></p>
+</body>
+</html>
