@@ -1,0 +1,19 @@
+---
+import "/src/styles/admin/loginIsland.css";
+---
+
+<div id="main-login">
+    <h1>管理员登录</h1>
+    <div class="placeholder"></div>
+    <form id="verify-form">
+        <label for="username">用户名：</label>
+        <input type="text" id="username" placeholder="用户名" required />
+        <br/>
+        <label for="token">验证码：</label>
+        <input type="text" id="token" placeholder="输入验证码" required />
+    </form>
+    <div class="placeholder"></div>
+    <button id="external-submit">验证</button>
+</div>
+<p id="result"></p>
+<script type="module" src="/src/pages/admin/scripts/loginIsland.js"></script>

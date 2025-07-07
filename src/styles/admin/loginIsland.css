@@ -1,0 +1,51 @@
+:root {
+    --placeholder-side-length: 50px;
+}
+#main-login{
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+@media (max-width: 768px) {
+    #main-login {
+        flex-direction: column;
+        align-items: center;
+    }
+}
+h1{
+    align-self: center;  /* 在 flex 容器中居中对齐 */
+}
+#verify-form{
+    line-height: 3;
+}
+.placeholder{
+    width: var(--placeholder-side-length);
+    height: var(--placeholder-side-length);
+}
+#external-submit {
+    cursor: pointer;
+    align-self: center;  /* 在 flex 容器中居中对齐 */
+}
+#verify-form input,#external-submit{
+    height: 1.5rem;
+}
+#result{
+    position: fixed;
+    text-align: center;
+    /*bottom: 5vh;*/
+    /*margin: 0 auto;*/
+}
+#result:empty {
+    display: none;
+}
+@media (max-width: 768px) {
+    #result {
+        bottom: 2vh;
+        font-size: 0.9rem;
+        max-width: 90%;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+}
