@@ -1,17 +1,20 @@
 <template>
   <div id="main-login">
-    <h1>管理员登录</h1>
-    <form @submit.prevent="handleSubmit" id="verify-form">
-      <label for="username">用户名：</label>
-      <input type="text" id="username" v-model="username" required />
-      <br />
-      <label for="token">验证码：</label>
-      <input type="text" id="token" v-model="token" required />
-    </form>
-    <button @click="triggerSubmit">验证</button>
-    <p id="result" v-if="result" class="show">{{ result }}</p>
+      <h1>管理员登录</h1>
+      <div class="placeholder"></div>
+      <form @submit.prevent="handleSubmit" id="verify-form">
+        <label for="username">用户名：</label>
+        <input type="text" id="username" v-model="username" required />
+        <br />
+        <label for="token">验证码：</label>
+        <input type="text" id="token" v-model="token" required />
+      </form>
+      <div class="placeholder"></div>
+      <button @click="triggerSubmit" id="external-submit">验证</button>
+      <p id="result" v-if="result" class="show">{{ result }}</p>
   </div>
 </template>
+
 
 <script setup>
 import { ref } from 'vue';
@@ -22,7 +25,7 @@ const result = ref('');
 
 const handleSubmit = async () => {
   if (!username.value || !token.value) {
-    alert('请输入用户名和验证码');
+    // alert('请输入用户名和验证码');
     return;
   }
 
