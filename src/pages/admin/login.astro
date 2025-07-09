@@ -1,18 +1,15 @@
 ---
 import "/src/styles/admin/login.css";
+import "/src/styles/admin/adminGlobal.css";
 import LoginIsland from '../../components/admin/LoginIsland.vue';
+import ThemeToggleIsland from '../../components/admin/ThemeToggleIsland.vue';
+import IsDarkLayout from '../../layouts/IsDarkLayout.astro';
 ---
 
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8" />
-    <title>管理员登录</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-</head>
-<body>
+<IsDarkLayout title="管理员登录">
     <main>
+        <ThemeToggleIsland client:load />
         <LoginIsland client:load />
     </main>
-    <a id="register-in" href="/src/pages/admin/register">注册管理员</a>
-</body>
-</html>
+    <a id="register-in" href="/admin/register">注册管理员</a>
+</IsDarkLayout>

@@ -1,27 +1,13 @@
 ---
+import "/src/styles/admin/register.css";
+import "/src/styles/admin/adminGlobal.css";
+import RegisterIsland from '../../components/admin/RegisterIsland.vue';
+import ThemeToggleIsland from '../../components/admin/ThemeToggleIsland.vue';
+import IsDarkLayout from '../../layouts/IsDarkLayout.astro';
 ---
 
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8" />
-    <title>管理员登录</title>
-</head>
-<body>
-<h1>管理员登录</h1>
-
-<div>
-    <p>请用 Google Authenticator 扫码绑定：</p>
-    <img id="qr" src="" alt="二维码" />
-</div>
-
-<form id="verify-form">
-    <input type="text" id="token" placeholder="输入验证码" />
-    <button type="submit">验证</button>
-</form>
-
-<p id="result"></p>
-
-<script type="module" src="/src/pages/admin/scripts/register.js"></script>
-
-</body>
-</html>
+<IsDarkLayout title="管理员注册">
+    <ThemeToggleIsland client:load />
+    <RegisterIsland client:load />
+    <a id="login-in" href="/admin/login">管理员登录</a>
+</IsDarkLayout>

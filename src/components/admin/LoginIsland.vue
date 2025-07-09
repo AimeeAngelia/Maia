@@ -5,9 +5,9 @@
       <form @submit.prevent="handleSubmit" id="verify-form">
         <label for="username">用户名：</label>
         <input type="text" id="username" v-model="username" required />
-        <br />
+        <div class="placeholder"></div>
         <label for="token">验证码：</label>
-        <input type="text" id="token" v-model="token" required />
+        <input type="text" id="token" v-model="token" @keydown.enter="triggerSubmit" required />
       </form>
       <div class="placeholder"></div>
       <button @click="triggerSubmit" id="external-submit">验证</button>
@@ -43,6 +43,9 @@ const handleSubmit = async () => {
     }, 3000);
   } catch (err) {
     result.value = '⚠️ 请求失败';
+    setTimeout(() => {
+      result.value = '';
+    }, 3000);
   }
 };
 

@@ -8,16 +8,17 @@ body{
     /*);*/
     display: grid;
     place-items: center;  /* 同时水平和垂直居中 */
-    height: 100vh;
-    overflow: hidden;
+    height: 94vh;
+    position: relative;
+    /*overflow: hidden;*/
 }
 main{
     position: relative;//给result提供定位点
     display: flex;
     justify-content: center;
 }
-#register-in{
-    position: absolute;
+#login-in{
+    position: fixed;
     text-align: center;
     bottom: 1vh;
 }

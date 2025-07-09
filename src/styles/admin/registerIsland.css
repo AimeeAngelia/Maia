@@ -1,26 +1,27 @@
 :root {
-    --placeholder-size: 50px;
     --form-gap: 1rem;
     --input-height: 1.5rem;
     --feedback-font-size: 0.9rem;
 }
 
-#main-login {
+#admin-register {
     display: flex;
-    flex-direction: row;
-    align-items: flex-start;
+    position: relative; /* 让 .error 的 absolute 有参照物 */
+    /*flex-direction: column;*/
+    align-items: center;
     gap: var(--form-gap);
-    position: relative; /* 供子元素定位使用 */
     padding: 2rem;
+    /*max-width: 480px;*/
+    margin: 0 auto;
 }
-
 @media (max-width: 768px) {
-    #main-login {
+    #admin-register {
         flex-direction: column;
         align-items: center;
         padding: 1.5rem;
     }
 }
+
 
 h1 {
     align-self: center;
@@ -28,29 +29,15 @@ h1 {
     text-align: center;
 }
 
-#verify-form {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    line-height: 1.6;
-}
-
-.placeholder {
-    width: var(--placeholder-size, 50px);
-    height: var(--placeholder-size, 50px);
-    /*background-color: rgba(0, 0, 0, 0.05);*/
-    /*border: 1px dashed #aaa;*/
-    /*border-radius: 6px;*/
-}
-
-
-#verify-form input {
+#admin-register input {
     height: var(--input-height);
     padding: 0.25rem 0.5rem;
     font-size: 1rem;
+    box-sizing: border-box;
+    width: 100%;
 }
 
-#external-submit {
+#admin-register button {
     cursor: pointer;
     align-self: center;
     padding: 0.4rem 1rem;
@@ -63,32 +50,63 @@ h1 {
     /*transition: background-color 0.2s ease;*/
 }
 
-#external-submit:hover {
+#admin-register button:hover {
     /*background-color: #cccccc;*/
 }
 
-#result {
+
+img {
+    display: block;
+    margin-top: 1rem;
+    max-width: 250px;
+}
+
+@media (max-width: 768px) {
+    img {
+        max-width: 90%;
+    }
+}
+.placeholder {
+    width: var(--placeholder-size, 50px);
+    height: var(--placeholder-size, 50px);
+    /*background-color: rgba(0, 0, 0, 0.05);*/
+    /*border: 1px dashed #aaa;*/
+    /*border-radius: 6px;*/
+}
+.v-flex{
+    /*display: flex;*/
+}
+.error {
     position: absolute;
-    bottom: -20vh;
+    bottom: -5rem;
     left: 50%;
     transform: translateX(-50%);
-    text-align: center;
     font-size: var(--feedback-font-size);
     color: #333;
     background-color: rgba(255, 255, 255, 0.9);
     padding: 0.5rem 1rem;
     border-radius: 6px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    max-width: 90%;
+    word-break: break-word;
+    z-index: 999; /* 防止被其他元素遮住 */
     transition: opacity 0.3s ease-in-out;
 }
 
-#result:empty {
+.error:empty {
     display: none;
 }
 
+
 @media (max-width: 768px) {
-    #result {
-        bottom: -5vh;
+    .error {
+        bottom: -10vh;
         max-width: 90%;
     }
+}
+.centre{
+    justify-content: center;
+    margin:0 auto;
+    width: fit-content;
 }

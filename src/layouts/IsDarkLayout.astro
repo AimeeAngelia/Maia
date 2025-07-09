@@ -1,0 +1,18 @@
+---
+const themeCookie = Astro.cookies.get('theme');
+const themeValue = themeCookie?.value;
+const isDark = themeValue === 'dark';
+const title = Astro.props.title || '默认标题';
+---
+
+<html lang="zh" class="dark">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <slot name="head" />
+</head>
+<body>
+<slot />
+</body>
+</html>
