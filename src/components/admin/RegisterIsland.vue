@@ -52,7 +52,7 @@ const registerError = ref('');
 
 // const adminError = ref('');
 
-// 阶段一：验证管理员令牌
+// 阶段一：验证Maia令牌
 const verifyAdmin = async () => {
   try {
     const res = await fetch('/api/totp/authorize', {
