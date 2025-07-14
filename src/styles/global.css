@@ -1,0 +1,338 @@
+/* 洛谷风格的全局样式 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background-color: #f5f5f5;
+}
+
+/* 导航栏样式 */
+.navbar {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 0;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    height: 60px;
+}
+
+.nav-brand a {
+    color: white;
+    text-decoration: none;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.nav-links {
+    display: flex;
+    gap: 30px;
+}
+
+.nav-links a {
+    color: white;
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+}
+
+.nav-links a:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* 主要内容区域 */
+main {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 0 20px;
+    min-height: calc(100vh - 140px);
+}
+
+/* 论坛样式 */
+.forum-header {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.forum-title {
+    font-size: 28px;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.forum-stats {
+    display: flex;
+    gap: 30px;
+    color: #666;
+    font-size: 14px;
+}
+
+.forum-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: white;
+    border-radius: 8px;
+    padding: 15px 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.category-tabs {
+    display: flex;
+    gap: 10px;
+}
+
+.tab {
+    padding: 8px 16px;
+    border-radius: 4px;
+    border: none;
+    background: #f0f0f0;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.tab.active {
+    background: #667eea;
+    color: white;
+}
+
+.tab:hover {
+    background: #5a6fd8;
+    color: white;
+}
+
+.new-post-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: transform 0.2s;
+}
+
+.new-post-btn:hover {
+    transform: translateY(-1px);
+}
+
+/* 帖子列表样式 */
+.post-list {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.post-item {
+    display: flex;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.2s;
+}
+
+.post-item:hover {
+    background-color: #f8f9fa;
+}
+
+.post-item:last-child {
+    border-bottom: none;
+}
+
+.post-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 15px;
+    object-fit: cover;
+}
+
+.post-content {
+    flex: 1;
+}
+
+.post-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 5px;
+}
+
+.post-title:hover {
+    color: #667eea;
+}
+
+.post-meta {
+    font-size: 13px;
+    color: #888;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.post-stats {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 80px;
+    font-size: 13px;
+    color: #666;
+}
+
+.post-stats .views {
+    margin-bottom: 5px;
+}
+
+/* 标签样式 */
+.tag {
+    display: inline-block;
+    background: #f0f8ff;
+    color: #667eea;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    margin-right: 5px;
+}
+
+.tag.top {
+    background: #ff6b6b;
+    color: white;
+}
+
+.tag.good {
+    background: #51cf66;
+    color: white;
+}
+
+/* 分页样式 */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-top: 30px;
+    padding: 20px;
+}
+
+.page-btn {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    background: white;
+    color: #666;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: all 0.3s;
+}
+
+.page-btn:hover,
+.page-btn.active {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+}
+
+/* 侧边栏样式 */
+.forum-sidebar {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.sidebar-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.hot-posts {
+    list-style: none;
+}
+
+.hot-posts li {
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.hot-posts li:last-child {
+    border-bottom: none;
+}
+
+.hot-posts a {
+    color: #666;
+    text-decoration: none;
+    font-size: 14px;
+    display: block;
+}
+
+.hot-posts a:hover {
+    color: #667eea;
+}
+
+/* 页脚样式 */
+footer {
+    background: #333;
+    color: white;
+    text-align: center;
+    padding: 20px 0;
+    margin-top: 40px;
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .nav-container {
+        flex-direction: column;
+        height: auto;
+        padding: 15px 20px;
+    }
+
+    .nav-links {
+        margin-top: 10px;
+    }
+
+    .forum-actions {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .post-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .post-stats {
+        align-self: flex-end;
+    }
+}

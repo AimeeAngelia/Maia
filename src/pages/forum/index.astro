@@ -1,0 +1,274 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import posts from "../../data/posts.json";
+
+// 按照置顶和发帖时间排序
+const sortedPosts = posts.sort((a, b) => {
+    if (a.isTop && !b.isTop) return -1;
+    if (!a.isTop && b.isTop) return 1;
+    return new Date(b.postTime).getTime() - new Date(a.postTime).getTime();
+});
+
+// 热门帖子 (按回复数排序)
+const hotPosts = [...posts].sort((a, b) => b.replies - a.replies).slice(0, 5);
+
+// 格式化时间
+function formatTime(timeStr: string) {
+    const time = new Date(timeStr);
+    const now = new Date();
+    const diff = now.getTime() - time.getTime();
+    const minutes = Math.floor(diff / (1000 * 60));
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+    if (minutes < 60) return `${minutes} 分钟前`;
+    if (hours < 24) return `${hours} 小时前`;
+    if (days < 7) return `${days} 天前`;
+    return time.toLocaleDateString("zh-CN");
+}
+---
+
+<BaseLayout title="讨论区 - 洛谷">
+    <div class="forum-container">
+        <!-- 论坛头部 -->
+        <div class="forum-header">
+            <h1 class="forum-title">讨论区</h1>
+            <div class="forum-stats">
+                <span>总帖数: {posts.length}</span>
+                <span>今日发帖: 3</span>
+                <span>在线用户: 1,234</span>
+            </div>
+        </div>
+
+        <div class="forum-layout">
+            <!-- 主要内容区 -->
+            <div class="forum-main">
+                <!-- 操作栏 -->
+                <div class="forum-actions">
+                    <div class="category-tabs">
+                        <button class="tab active">全部</button>
+                        <button class="tab">题解</button>
+                        <button class="tab">求助</button>
+                        <button class="tab">讨论</button>
+                        <button class="tab">灌水</button>
+                    </div>
+                    <button
+                        class="new-post-btn"
+                        onclick="location.href='/forum/post/new'"
+                    >
+                        发布新帖
+                    </button>
+                </div>
+
+                <!-- 帖子列表 -->
+                <div class="post-list">
+                    {
+                        sortedPosts.map((post) => (
+                            <div class="post-item">
+                                <img
+                                    src={post.avatar}
+                                    alt={post.author}
+                                    class="post-avatar"
+                                />
+
+                                <div class="post-content">
+                                    <a
+                                        href={`/forum/post/${post.id}`}
+                                        class="post-title"
+                                    >
+                                        {post.isTop && (
+                                            <span class="tag top">置顶</span>
+                                        )}
+                                        {post.isGood && (
+                                            <span class="tag good">精华</span>
+                                        )}
+                                        <span class="tag">{post.category}</span>
+                                        {post.title}
+                                    </a>
+
+                                    <div class="post-meta">
+                                        <span>作者: {post.author}</span>
+                                        <span>
+                                            发布时间:{" "}
+                                            {formatTime(post.postTime)}
+                                        </span>
+                                        <span>
+                                            最后回复:{" "}
+                                            {formatTime(post.lastReply)}
+                                        </span>
+                                        <div class="post-tags">
+                                            {post.tags.map((tag) => (
+                                                <span class="tag">{tag}</span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="post-stats">
+                                    <div class="views">{post.views} 查看</div>
+                                    <div class="replies">
+                                        {post.replies} 回复
+                                    </div>
+                                </div>
+                            </div>
+                        ))
+                    }
+                </div>
+
+                <!-- 分页 -->
+                <div class="pagination">
+                    <a href="#" class="page-btn">上一页</a>
+                    <a href="#" class="page-btn active">1</a>
+                    <a href="#" class="page-btn">2</a>
+                    <a href="#" class="page-btn">3</a>
+                    <span>...</span>
+                    <a href="#" class="page-btn">10</a>
+                    <a href="#" class="page-btn">下一页</a>
+                </div>
+            </div>
+
+            <!-- 侧边栏 -->
+            <div class="forum-sidebar">
+                <div class="sidebar-section">
+                    <h3 class="sidebar-title">热门帖子</h3>
+                    <ul class="hot-posts">
+                        {
+                            hotPosts.map((post) => (
+                                <li>
+                                    <a href={`/forum/post/${post.id}`}>
+                                        {post.title}
+                                        <span style="color: #999; font-size: 12px;">
+                                            ({post.replies})
+                                        </span>
+                                    </a>
+                                </li>
+                            ))
+                        }
+                    </ul>
+                </div>
+
+                <div class="sidebar-section">
+                    <h3 class="sidebar-title">讨论区统计</h3>
+                    <div class="forum-stats-detail">
+                        <div class="stat-item">
+                            <span class="stat-label">今日新帖</span>
+                            <span class="stat-value">12</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">昨日新帖</span>
+                            <span class="stat-value">18</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">总帖数</span>
+                            <span class="stat-value">{posts.length}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">总用户数</span>
+                            <span class="stat-value">8,456</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <h3 class="sidebar-title">论坛规则</h3>
+                    <div class="forum-rules">
+                        <ul>
+                            <li>请遵守论坛规章制度</li>
+                            <li>禁止发布违法违规内容</li>
+                            <li>保持友善，尊重他人</li>
+                            <li>禁止恶意刷屏灌水</li>
+                            <li>发帖前请先搜索相关内容</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .forum-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .forum-layout {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .forum-main {
+            min-height: 600px;
+        }
+
+        .sidebar-section {
+            margin-bottom: 30px;
+        }
+
+        .forum-stats-detail {
+            font-size: 14px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            color: #666;
+        }
+
+        .stat-value {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .forum-rules ul {
+            list-style: none;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .forum-rules li {
+            padding: 5px 0;
+            position: relative;
+            padding-left: 15px;
+        }
+
+        .forum-rules li:before {
+            content: "•";
+            color: #667eea;
+            position: absolute;
+            left: 0;
+        }
+
+        @media (max-width: 768px) {
+            .forum-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .forum-sidebar {
+                order: -1;
+            }
+        }
+    </style>
+
+    <script>
+        // 分类标签切换功能
+        document.querySelectorAll(".tab").forEach((tab) => {
+            tab.addEventListener("click", () => {
+                document
+                    .querySelectorAll(".tab")
+                    .forEach((t) => t.classList.remove("active"));
+                tab.classList.add("active");
+            });
+        });
+    </script>
+</BaseLayout>

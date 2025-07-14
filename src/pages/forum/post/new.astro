@@ -1,0 +1,645 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="发布新帖 - 讨论区 - 洛谷">
+    <div class="new-post-container">
+        <!-- 返回按钮 -->
+        <div class="back-btn">
+            <a href="/forum" class="btn-back">← 返回讨论区</a>
+        </div>
+
+        <!-- 发帖表单 -->
+        <div class="new-post-form">
+            <h1 class="form-title">发布新帖</h1>
+
+            <form class="post-form">
+                <!-- 帖子标题 -->
+                <div class="form-group">
+                    <label for="title" class="form-label">标题 *</label>
+                    <input
+                        type="text"
+                        id="title"
+                        name="title"
+                        class="form-input"
+                        placeholder="请输入帖子标题..."
+                        maxlength="100"
+                        required
+                    />
+                    <div class="char-count">0/100</div>
+                </div>
+
+                <!-- 分类选择 -->
+                <div class="form-group">
+                    <label for="category" class="form-label">分类 *</label>
+                    <select
+                        id="category"
+                        name="category"
+                        class="form-select"
+                        required
+                    >
+                        <option value="">请选择分类</option>
+                        <option value="题解">题解</option>
+                        <option value="求助">求助</option>
+                        <option value="讨论">讨论</option>
+                        <option value="灌水">灌水</option>
+                    </select>
+                </div>
+
+                <!-- 标签输入 -->
+                <div class="form-group">
+                    <label for="tags" class="form-label">标签</label>
+                    <input
+                        type="text"
+                        id="tags"
+                        name="tags"
+                        class="form-input"
+                        placeholder="输入标签，用逗号分隔 (例如: 算法, 入门, C++)"
+                    />
+                    <div class="form-tip">最多可添加 5 个标签</div>
+                </div>
+
+                <!-- 内容编辑器 -->
+                <div class="form-group">
+                    <label for="content" class="form-label">内容 *</label>
+                    <div class="editor-toolbar">
+                        <button
+                            type="button"
+                            class="toolbar-btn"
+                            data-action="bold"
+                        >
+                            <strong>B</strong>
+                        </button>
+                        <button
+                            type="button"
+                            class="toolbar-btn"
+                            data-action="italic"
+                        >
+                            <em>I</em>
+                        </button>
+                        <button
+                            type="button"
+                            class="toolbar-btn"
+                            data-action="code"
+                        >
+                            Code
+                        </button>
+                        <button
+                            type="button"
+                            class="toolbar-btn"
+                            data-action="link"
+                        >
+                            🔗
+                        </button>
+                    </div>
+                    <textarea
+                        id="content"
+                        name="content"
+                        class="form-textarea"
+                        placeholder="请输入帖子内容..."
+                        rows="15"
+                        required></textarea>
+                    <div class="editor-tips">
+                        <div class="tips-left">
+                            支持 Markdown 语法，可以使用代码块、链接等格式
+                        </div>
+                        <div class="char-count-content">0 字符</div>
+                    </div>
+                </div>
+
+                <!-- 预览区域 -->
+                <div class="form-group">
+                    <div class="preview-header">
+                        <button
+                            type="button"
+                            class="preview-btn"
+                            id="togglePreview"
+                        >
+                            📖 预览
+                        </button>
+                    </div>
+                    <div
+                        class="preview-content"
+                        id="previewContent"
+                        style="display: none;"
+                    >
+                        <div class="preview-placeholder">
+                            在上方输入内容以查看预览效果
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 发布选项 -->
+                <div class="form-group">
+                    <div class="publish-options">
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="anonymous" value="1" />
+                            匿名发布
+                        </label>
+                        <label class="checkbox-label">
+                            <input
+                                type="checkbox"
+                                name="allowReply"
+                                value="1"
+                                checked
+                            />
+                            允许回复
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 提交按钮 -->
+                <div class="form-actions">
+                    <button type="button" class="btn-cancel">取消</button>
+                    <button type="submit" class="btn-submit">发布帖子</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- 发帖指南 -->
+        <div class="post-guide">
+            <h3>发帖指南</h3>
+            <ul>
+                <li>标题要简洁明确，能够准确概括帖子内容</li>
+                <li>选择合适的分类，方便其他用户查找</li>
+                <li>内容要详细具体，便于其他用户理解和回复</li>
+                <li>代码请使用代码块格式，保持良好的可读性</li>
+                <li>遵守社区规范，文明友善地进行讨论</li>
+                <li>发帖前请先搜索，避免重复内容</li>
+            </ul>
+        </div>
+    </div>
+
+    <style>
+        .new-post-container {
+            max-width: 900px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 250px;
+            gap: 20px;
+        }
+
+        .back-btn {
+            grid-column: 1 / -1;
+            margin-bottom: 20px;
+        }
+
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 16px;
+            background: white;
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+        }
+
+        .btn-back:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .new-post-form {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+        }
+
+        .char-count {
+            text-align: right;
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        .form-tip {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        .editor-toolbar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px 6px 0 0;
+            border: 1px solid #ddd;
+            border-bottom: none;
+        }
+
+        .toolbar-btn {
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            background: white;
+            color: #666;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .toolbar-btn:hover {
+            background: #f0f0f0;
+            border-color: #667eea;
+        }
+
+        .form-textarea {
+            width: 100%;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 0 0 6px 6px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 300px;
+        }
+
+        .form-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+        }
+
+        .editor-tips {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+            font-size: 12px;
+            color: #888;
+        }
+
+        .preview-header {
+            margin-bottom: 10px;
+        }
+
+        .preview-btn {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            background: white;
+            color: #666;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .preview-btn:hover,
+        .preview-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .preview-content {
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: #f8f9fa;
+            min-height: 200px;
+        }
+
+        .preview-placeholder {
+            color: #888;
+            font-style: italic;
+            text-align: center;
+            padding: 50px 0;
+        }
+
+        .publish-options {
+            display: flex;
+            gap: 20px;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #666;
+            cursor: pointer;
+        }
+
+        .checkbox-label input[type="checkbox"] {
+            margin: 0;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            padding-top: 20px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .btn-cancel {
+            padding: 10px 20px;
+            border: 1px solid #ddd;
+            background: white;
+            color: #666;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .btn-cancel:hover {
+            background: #f8f9fa;
+            border-color: #bbb;
+        }
+
+        .btn-submit {
+            padding: 10px 20px;
+            border: none;
+            background: #667eea;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+
+        .btn-submit:hover {
+            background: #5a6fd8;
+        }
+
+        .post-guide {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            height: fit-content;
+        }
+
+        .post-guide h3 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .post-guide ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .post-guide li {
+            padding: 8px 0;
+            font-size: 14px;
+            color: #666;
+            position: relative;
+            padding-left: 15px;
+        }
+
+        .post-guide li:before {
+            content: "•";
+            color: #667eea;
+            position: absolute;
+            left: 0;
+        }
+
+        @media (max-width: 768px) {
+            .new-post-container {
+                grid-template-columns: 1fr;
+            }
+
+            .post-guide {
+                order: -1;
+            }
+
+            .new-post-form {
+                padding: 20px;
+            }
+
+            .publish-options {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+    <script>
+        // 字符计数功能
+        const titleInput = document.getElementById("title") as HTMLInputElement;
+        const contentTextarea = document.getElementById(
+            "content",
+        ) as HTMLTextAreaElement;
+        const titleCharCount = document.querySelector(
+            ".char-count",
+        ) as HTMLElement;
+        const contentCharCount = document.querySelector(
+            ".char-count-content",
+        ) as HTMLElement;
+
+        titleInput?.addEventListener("input", (e) => {
+            const target = e.target as HTMLInputElement;
+            if (target && titleCharCount) {
+                const count = target.value.length;
+                titleCharCount.textContent = `${count}/100`;
+                (titleCharCount as HTMLElement).style.color =
+                    count > 90 ? "#ff6b6b" : "#888";
+            }
+        });
+
+        contentTextarea?.addEventListener("input", (e) => {
+            const target = e.target as HTMLTextAreaElement;
+            if (target && contentCharCount) {
+                const count = target.value.length;
+                contentCharCount.textContent = `${count} 字符`;
+            }
+        });
+
+        // 预览功能
+        const togglePreviewBtn = document.getElementById(
+            "togglePreview",
+        ) as HTMLButtonElement;
+        const previewContent = document.getElementById(
+            "previewContent",
+        ) as HTMLElement;
+
+        togglePreviewBtn?.addEventListener("click", () => {
+            if (!previewContent) return;
+
+            const isVisible =
+                (previewContent as HTMLElement).style.display !== "none";
+
+            if (isVisible) {
+                (previewContent as HTMLElement).style.display = "none";
+                togglePreviewBtn.textContent = "📖 预览";
+                togglePreviewBtn.classList.remove("active");
+            } else {
+                if (contentTextarea) {
+                    const content = contentTextarea.value;
+                    if (content.trim()) {
+                        // 简单的 markdown 预览
+                        const htmlContent = content
+                            .replace(
+                                /```(\w+)?\n([\s\S]*?)```/g,
+                                "<pre><code>$2</code></pre>",
+                            )
+                            .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+                            .replace(/\*(.*?)\*/g, "<em>$1</em>")
+                            .replace(/\n/g, "<br>");
+                        previewContent.innerHTML = htmlContent;
+                    } else {
+                        previewContent.innerHTML =
+                            '<div class="preview-placeholder">在上方输入内容以查看预览效果</div>';
+                    }
+                }
+                (previewContent as HTMLElement).style.display = "block";
+                togglePreviewBtn.textContent = "🚫 关闭预览";
+                togglePreviewBtn.classList.add("active");
+            }
+        });
+
+        // 工具栏功能
+        document.querySelectorAll(".toolbar-btn").forEach((btn) => {
+            btn.addEventListener("click", () => {
+                const button = btn as HTMLButtonElement;
+                const action = button.dataset.action;
+                const textarea = contentTextarea;
+
+                if (!textarea || !action) return;
+
+                const start = textarea.selectionStart;
+                const end = textarea.selectionEnd;
+                const selectedText = textarea.value.substring(start, end);
+
+                let replacement = "";
+                switch (action) {
+                    case "bold":
+                        replacement = `**${selectedText || "粗体文字"}**`;
+                        break;
+                    case "italic":
+                        replacement = `*${selectedText || "斜体文字"}*`;
+                        break;
+                    case "code":
+                        if (selectedText.includes("\n")) {
+                            replacement = `\`\`\`\n${selectedText || "代码块"}\n\`\`\``;
+                        } else {
+                            replacement = `\`${selectedText || "行内代码"}\``;
+                        }
+                        break;
+                    case "link":
+                        replacement = `[${selectedText || "链接文字"}](链接地址)`;
+                        break;
+                }
+
+                textarea.value =
+                    textarea.value.substring(0, start) +
+                    replacement +
+                    textarea.value.substring(end);
+                textarea.focus();
+
+                // 触发字符计数更新
+                const event = new Event("input", { bubbles: true });
+                textarea.dispatchEvent(event);
+            });
+        });
+
+        // 表单提交
+        document
+            .querySelector(".post-form")
+            ?.addEventListener("submit", (e) => {
+                e.preventDefault();
+
+                const form = e.target as HTMLFormElement;
+                if (!form) return;
+
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData);
+
+                // 简单验证
+                const title = data.title as string;
+                const category = data.category as string;
+                const content = data.content as string;
+
+                if (!title.trim()) {
+                    alert("请输入标题");
+                    return;
+                }
+
+                if (!category) {
+                    alert("请选择分类");
+                    return;
+                }
+
+                if (!content.trim()) {
+                    alert("请输入内容");
+                    return;
+                }
+
+                // 这里应该发送到后端
+                alert(
+                    "发帖功能演示，实际需要后端支持\n\n" +
+                        JSON.stringify(data, null, 2),
+                );
+            });
+
+        // 取消按钮
+        document.querySelector(".btn-cancel")?.addEventListener("click", () => {
+            if (confirm("确定要取消发帖吗？未保存的内容将丢失。")) {
+                window.location.href = "/forum";
+            }
+        });
+    </script>
+</BaseLayout>
