@@ -1,30 +1,29 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import posts from "../../data/posts.json";
+import { ForumAPI, formatTime } from "../../utils/api.js";
 
-// 按照置顶和发帖时间排序
-const sortedPosts = posts.sort((a, b) => {
-    if (a.isTop && !b.isTop) return -1;
-    if (!a.isTop && b.isTop) return 1;
-    return new Date(b.postTime).getTime() - new Date(a.postTime).getTime();
-});
+// 获取帖子数据和统计信息
+let posts = [];
+let stats = {
+    totalPosts: 0,
+    todayPosts: 0,
+    hotPosts: [],
+};
 
-// 热门帖子 (按回复数排序)
-const hotPosts = [...posts].sort((a, b) => b.replies - a.replies).slice(0, 5);
+try {
+    // 获取帖子列表
+    const postsResponse = await ForumAPI.getPosts({
+        limit: 20,
+        sort: "newest",
+    });
+    posts = postsResponse.data || [];
 
-// 格式化时间
-function formatTime(timeStr: string) {
-    const time = new Date(timeStr);
-    const now = new Date();
-    const diff = now.getTime() - time.getTime();
-    const minutes = Math.floor(diff / (1000 * 60));
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-
-    if (minutes < 60) return `${minutes} 分钟前`;
-    if (hours < 24) return `${hours} 小时前`;
-    if (days < 7) return `${days} 天前`;
-    return time.toLocaleDateString("zh-CN");
+    // 获取论坛统计
+    const statsResponse = await ForumAPI.getForumStats();
+    stats = statsResponse.data || stats;
+} catch (error) {
+    console.error("Failed to fetch forum data:", error);
+    // 如果 API 失败，使用备用数据或显示错误信息
 }
 ---
 
@@ -34,8 +33,8 @@ function formatTime(timeStr: string) {
         <div class="forum-header">
             <h1 class="forum-title">讨论区</h1>
             <div class="forum-stats">
-                <span>总帖数: {posts.length}</span>
-                <span>今日发帖: 3</span>
+                <span>总帖数: {stats.totalPosts}</span>
+                <span>今日发帖: {stats.todayPosts}</span>
                 <span>在线用户: 1,234</span>
             </div>
         </div>
@@ -59,11 +58,10 @@ function formatTime(timeStr: string) {
                         发布新帖
                     </button>
                 </div>
-
                 <!-- 帖子列表 -->
                 <div class="post-list">
                     {
-                        sortedPosts.map((post) => (
+                        posts.map((post: any) => (
                             <div class="post-item">
                                 <img
                                     src={post.avatar}
@@ -97,7 +95,7 @@ function formatTime(timeStr: string) {
                                             {formatTime(post.lastReply)}
                                         </span>
                                         <div class="post-tags">
-                                            {post.tags.map((tag) => (
+                                            {post.tags.map((tag: any) => (
                                                 <span class="tag">{tag}</span>
                                             ))}
                                         </div>
@@ -133,7 +131,7 @@ function formatTime(timeStr: string) {
                     <h3 class="sidebar-title">热门帖子</h3>
                     <ul class="hot-posts">
                         {
-                            hotPosts.map((post) => (
+                            stats.hotPosts?.map((post: any) => (
                                 <li>
                                     <a href={`/forum/post/${post.id}`}>
                                         {post.title}
@@ -152,7 +150,7 @@ function formatTime(timeStr: string) {
                     <div class="forum-stats-detail">
                         <div class="stat-item">
                             <span class="stat-label">今日新帖</span>
-                            <span class="stat-value">12</span>
+                            <span class="stat-value">{stats.todayPosts}</span>
                         </div>
                         <div class="stat-item">
                             <span class="stat-label">昨日新帖</span>
@@ -160,7 +158,7 @@ function formatTime(timeStr: string) {
                         </div>
                         <div class="stat-item">
                             <span class="stat-label">总帖数</span>
-                            <span class="stat-value">{posts.length}</span>
+                            <span class="stat-value">{stats.totalPosts}</span>
                         </div>
                         <div class="stat-item">
                             <span class="stat-label">总用户数</span>

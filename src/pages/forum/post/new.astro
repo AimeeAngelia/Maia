@@ -594,12 +594,10 @@ import BaseLayout from "../../../layouts/BaseLayout.astro";
                 const event = new Event("input", { bubbles: true });
                 textarea.dispatchEvent(event);
             });
-        });
-
-        // 表单提交
+        }); // 表单提交
         document
             .querySelector(".post-form")
-            ?.addEventListener("submit", (e) => {
+            ?.addEventListener("submit", async (e) => {
                 e.preventDefault();
 
                 const form = e.target as HTMLFormElement;
@@ -607,11 +605,16 @@ import BaseLayout from "../../../layouts/BaseLayout.astro";
 
                 const formData = new FormData(form);
                 const data = Object.fromEntries(formData);
+                const submitBtn = form.querySelector(
+                    ".btn-submit",
+                ) as HTMLButtonElement;
 
                 // 简单验证
                 const title = data.title as string;
                 const category = data.category as string;
                 const content = data.content as string;
+                const tags = data.tags as string;
+                const anonymous = data.anonymous === "1";
 
                 if (!title.trim()) {
                     alert("请输入标题");
@@ -628,11 +631,44 @@ import BaseLayout from "../../../layouts/BaseLayout.astro";
                     return;
                 }
 
-                // 这里应该发送到后端
-                alert(
-                    "发帖功能演示，实际需要后端支持\n\n" +
-                        JSON.stringify(data, null, 2),
-                );
+                // 处理标签
+                const tagArray = tags
+                    .split(",")
+                    .map((tag) => tag.trim())
+                    .filter((tag) => tag);
+
+                submitBtn.disabled = true;
+                submitBtn.textContent = "发布中...";
+
+                try {
+                    // 动态导入 API 工具
+                    const { ForumAPI, handleAPIError } = await import(
+                        "../../../utils/api.js"
+                    );
+
+                    const response = await ForumAPI.createPost({
+                        title: title.trim(),
+                        content: content.trim(),
+                        category,
+                        tags: tagArray,
+                        author: "当前用户", // 实际应该从用户登录状态获取
+                        authorId: "current_user",
+                        avatar: "/default-avatar.png",
+                        anonymous,
+                    });
+
+                    alert("帖子发布成功！");
+                    // 跳转到新创建的帖子页面
+                    window.location.href = `/forum/post/${response.data.id}`;
+                } catch (error) {
+                    const { handleAPIError } = await import(
+                        "../../../utils/api.js"
+                    );
+                    alert("发布失败：" + handleAPIError(error));
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = "发布帖子";
+                }
             });
 
         // 取消按钮

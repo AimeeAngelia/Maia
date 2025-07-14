@@ -1,0 +1,166 @@
+// 模拟数据库 - 在生产环境中应该使用真实数据库
+export let posts = [
+    {
+        "id": 1,
+        "title": "【题解】洛谷 P1001 A+B Problem",
+        "content": "这是最基础的编程题目，只需要读入两个整数并输出它们的和。\n\n```cpp\n#include <iostream>\nusing namespace std;\n\nint main() {\n    int a, b;\n    cin >> a >> b;\n    cout << a + b << endl;\n    return 0;\n}\n```",
+        "author": "算法爱好者",
+        "authorId": "user_001",
+        "avatar": "https://cdn.luogu.com.cn/upload/usericon/1.png",
+        "tags": ["题解", "入门"],
+        "postTime": "2025-07-14T09:30:00.000Z",
+        "lastReply": "2025-07-14T14:20:00.000Z",
+        "category": "题解",
+        "views": 1234,
+        "replies": 15,
+        "likes": 23,
+        "isTop": true,
+        "isGood": true,
+        "status": "published"
+    },
+    {
+        "id": 2,
+        "title": "新手求助：如何优化这个 DFS？",
+        "content": "各位大佬好，我在做一道搜索题的时候遇到了超时问题，想请教一下如何优化。\n\n题目大意：在一个 n×n 的网格中寻找从起点到终点的最短路径...",
+        "author": "编程小白",
+        "authorId": "user_002",
+        "avatar": "https://cdn.luogu.com.cn/upload/usericon/2.png",
+        "tags": ["求助", "搜索"],
+        "postTime": "2025-07-14T11:15:00.000Z",
+        "lastReply": "2025-07-14T13:45:00.000Z",
+        "category": "求助",
+        "views": 456,
+        "replies": 8,
+        "likes": 5,
+        "isTop": false,
+        "isGood": false,
+        "status": "published"
+    },
+    {
+        "id": 3,
+        "title": "分享一个有趣的数学问题",
+        "content": "今天在刷题的时候遇到了一个很有意思的数学问题，分享给大家：\n\n给定一个正整数 n，求满足以下条件的正整数对 (x, y) 的个数：\n- x + y = n\n- gcd(x, y) = 1\n\n大家来讨论一下这个问题的解法吧！",
+        "author": "数学达人",
+        "authorId": "user_003",
+        "avatar": "https://cdn.luogu.com.cn/upload/usericon/3.png",
+        "tags": ["数学", "讨论"],
+        "postTime": "2025-07-14T10:45:00.000Z",
+        "lastReply": "2025-07-14T14:10:00.000Z",
+        "category": "讨论",
+        "views": 789,
+        "replies": 12,
+        "likes": 18,
+        "isTop": false,
+        "isGood": true,
+        "status": "published"
+    },
+    {
+        "id": 4,
+        "title": "NOIP 2024 模拟赛题解",
+        "content": "本次模拟赛共四道题，难度适中，现在为大家分享详细题解。\n\nT1: 简单模拟题\nT2: 动态规划\nT3: 图论最短路\nT4: 数据结构",
+        "author": "竞赛教练",
+        "authorId": "user_004",
+        "avatar": "https://cdn.luogu.com.cn/upload/usericon/6.png",
+        "tags": ["题解", "NOIP", "模拟赛"],
+        "postTime": "2025-07-14T08:00:00.000Z",
+        "lastReply": "2025-07-14T14:30:00.000Z",
+        "category": "题解",
+        "views": 2345,
+        "replies": 28,
+        "likes": 45,
+        "isTop": true,
+        "isGood": true,
+        "status": "published"
+    },
+    {
+        "id": 5,
+        "title": "关于代码风格的一些建议",
+        "content": "作为一个写了很多年代码的老程序员，想给新手朋友们分享一些关于代码风格的建议：\n\n1. 保持代码整洁\n2. 使用有意义的变量名\n3. 适当添加注释\n4. 保持函数简洁",
+        "author": "老程序员",
+        "authorId": "user_005",
+        "avatar": "https://cdn.luogu.com.cn/upload/usericon/7.png",
+        "tags": ["经验分享", "代码风格"],
+        "postTime": "2025-07-14T07:30:00.000Z",
+        "lastReply": "2025-07-14T12:15:00.000Z",
+        "category": "灌水",
+        "views": 567,
+        "replies": 6,
+        "likes": 12,
+        "isTop": false,
+        "isGood": false,
+        "status": "published"
+    }
+];
+
+export let comments = [
+    {
+        "id": 1,
+        "postId": 1,
+        "content": "感谢楼主分享！虽然是最基础的题目，但是对新手来说很有帮助。",
+        "author": "学习中的新手",
+        "authorId": "user_010",
+        "avatar": "https://cdn.luogu.com.cn/upload/usericon/10.png",
+        "replyTime": "2025-07-14T10:00:00.000Z",
+        "floor": 1,
+        "likes": 3,
+        "parentId": null,
+        "status": "published"
+    },
+    {
+        "id": 2,
+        "postId": 1,
+        "content": "建议楼主可以加上 Python 和 Java 的解法，这样更全面一些。",
+        "author": "多语言爱好者",
+        "authorId": "user_011",
+        "avatar": "https://cdn.luogu.com.cn/upload/usericon/11.png",
+        "replyTime": "2025-07-14T11:30:00.000Z",
+        "floor": 2,
+        "likes": 5,
+        "parentId": null,
+        "status": "published"
+    },
+    {
+        "id": 3,
+        "postId": 2,
+        "content": "楼主可以试试用记忆化搜索，或者考虑用 BFS 来解决。",
+        "author": "算法老手",
+        "authorId": "user_012",
+        "avatar": "https://cdn.luogu.com.cn/upload/usericon/12.png",
+        "replyTime": "2025-07-14T12:00:00.000Z",
+        "floor": 1,
+        "likes": 8,
+        "parentId": null,
+        "status": "published"
+    },
+    {
+        "id": 4,
+        "postId": 3,
+        "content": "这个问题可以用欧拉函数来解决！φ(n) 就是答案。",
+        "author": "数论专家",
+        "authorId": "user_013",
+        "avatar": "https://cdn.luogu.com.cn/upload/usericon/13.png",
+        "replyTime": "2025-07-14T13:15:00.000Z",
+        "floor": 1,
+        "likes": 12,
+        "parentId": null,
+        "status": "published"
+    },
+    {
+        "id": 5,
+        "postId": 4,
+        "content": "期待详细题解！T3 的最短路是用 Dijkstra 还是 SPFA？",
+        "author": "竞赛选手",
+        "authorId": "user_014",
+        "avatar": "https://cdn.luogu.com.cn/upload/usericon/14.png",
+        "replyTime": "2025-07-14T14:00:00.000Z",
+        "floor": 1,
+        "likes": 6,
+        "parentId": null,
+        "status": "published"
+    }
+];
+
+// 生成新的 ID
+export function generateId(data) {
+    return Math.max(...data.map(item => item.id), 0) + 1;
+}

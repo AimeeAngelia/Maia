@@ -1,0 +1,624 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import { ForumAPI, formatTime, formatContent } from "../../../utils/api.js";
+
+// 设置为服务端渲染
+export const prerender = false;
+
+// 获取帖子ID和数据
+const { id } = Astro.params;
+const postId = parseInt(id || "1");
+
+let post = null;
+let postComments = [];
+let error = null;
+
+try {
+  // 获取帖子详情
+  const postResponse = await ForumAPI.getPost(postId);
+  post = postResponse.data;
+  // 获取评论列表
+  const commentsResponse = await ForumAPI.getComments(postId);
+  postComments = commentsResponse.data || [];
+} catch (err) {
+  console.error('Failed to fetch post data:', err);
+  error = (err as Error).message || '加载失败';
+}
+
+// 如果帖子不存在，返回 404
+if (!post && !error) {
+  return new Response(null, {
+    status: 404,
+    statusText: 'Post not found'
+  });
+}
+---
+
+{error ? (
+  <BaseLayout title="加载失败 - 洛谷">
+    <div class="error-container">
+      <h1>加载失败</h1>
+      <p>无法加载帖子内容：{error}</p>
+      <a href="/forum" class="btn-back">返回论坛</a>
+    </div>
+  </BaseLayout>
+) : (
+  <BaseLayout title={`${post.title} - 讨论区 - 洛谷`}>
+    <div class="post-container">
+      <!-- 返回按钮 -->
+      <div class="back-btn">
+        <a href="/forum" class="btn-back">← 返回讨论区</a>
+      </div>
+
+      <!-- 帖子主体 -->
+      <div class="post-detail">
+        <div class="post-header">
+          <div class="post-title-section">
+            <h1 class="post-title">
+              {post.isTop && <span class="tag top">置顶</span>}
+              {post.isGood && <span class="tag good">精华</span>}
+              <span class="tag">{post.category}</span>
+              {post.title}
+            </h1>
+            <div class="post-tags">
+              {post.tags?.map((tag: any) => <span class="tag">{tag}</span>)}
+            </div>
+          </div>
+          
+          <div class="post-actions">
+            <button class="action-btn like-btn" data-post-id={post.id}>
+              👍 点赞 ({post.likes})
+            </button>
+            <button class="action-btn">⭐ 收藏</button>
+            <button class="action-btn">🚩 举报</button>
+          </div>
+        </div>
+
+        <div class="post-author-info">
+          <img src={post.avatar} alt={post.author} class="author-avatar" />
+          <div class="author-details">
+            <div class="author-name">{post.author}</div>
+            <div class="post-time">发布于 {formatTime(post.postTime)}</div>
+          </div>
+          <div class="post-stats">
+            <span class="stat">{post.views} 查看</span>
+            <span class="stat">{post.replies} 回复</span>
+          </div>
+        </div>
+
+        <div class="post-content">
+          <div set:html={formatContent(post.content)}></div>
+        </div>
+      </div>
+
+      <!-- 回复列表 -->
+      <div class="replies-section">
+        <div class="replies-header">
+          <h2>回复 ({postComments.length})</h2>
+          <button class="reply-btn" id="scrollToReplyForm">回复帖子</button>
+        </div>
+
+        <div class="replies-list">
+          {postComments.map((comment: any) => (
+            <div class="reply-item" id={`comment-${comment.id}`}>
+              <div class="reply-header">
+                <img src={comment.avatar} alt={comment.author} class="reply-avatar" />
+                <div class="reply-info">
+                  <div class="reply-author">{comment.author}</div>
+                  <div class="reply-time">{formatTime(comment.replyTime)}</div>
+                </div>
+                <div class="reply-floor">#{comment.floor}</div>
+              </div>
+              <div class="reply-content">
+                <div set:html={formatContent(comment.content)}></div>
+              </div>
+              <div class="reply-actions">
+                <button class="reply-action like-comment-btn" data-comment-id={comment.id}>
+                  👍 {comment.likes || 0}
+                </button>
+                <button class="reply-action">回复</button>
+                <button class="reply-action">举报</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <!-- 回复表单 -->
+      <div class="reply-form-section" id="replyFormSection">
+        <h3>发表回复</h3>
+        <form class="reply-form" id="replyForm">
+          <input type="hidden" name="postId" value={post.id} />
+          <textarea 
+            name="content"
+            placeholder="请输入回复内容..."
+            class="reply-textarea"
+            rows="6"
+            required
+          ></textarea>
+          <div class="form-actions">
+            <div class="form-tips">
+              <span>支持 Markdown 语法</span>
+            </div>
+            <button type="submit" class="submit-btn">发布回复</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <style>
+      .post-container {
+        max-width: 900px;
+        margin: 0 auto;
+      }
+
+      .error-container {
+        max-width: 600px;
+        margin: 50px auto;
+        padding: 40px;
+        text-align: center;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .error-container h1 {
+        color: #ff6b6b;
+        margin-bottom: 20px;
+      }
+
+      .back-btn {
+        margin-bottom: 20px;
+      }
+
+      .btn-back {
+        display: inline-flex;
+        align-items: center;
+        padding: 8px 16px;
+        background: white;
+        color: #667eea;
+        text-decoration: none;
+        border-radius: 6px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s;
+      }
+
+      .btn-back:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+
+      .post-detail {
+        background: white;
+        border-radius: 8px;
+        padding: 30px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .post-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 20px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #f0f0f0;
+      }
+
+      .post-title {
+        font-size: 24px;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 10px;
+        line-height: 1.4;
+      }
+
+      .post-actions {
+        display: flex;
+        gap: 10px;
+      }
+
+      .action-btn {
+        padding: 8px 16px;
+        border: 1px solid #ddd;
+        background: white;
+        color: #666;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.3s;
+      }
+
+      .action-btn:hover {
+        background: #f8f9fa;
+        border-color: #667eea;
+        color: #667eea;
+      }
+
+      .action-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .post-author-info {
+        display: flex;
+        align-items: center;
+        margin-bottom: 25px;
+      }
+
+      .author-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        margin-right: 15px;
+        object-fit: cover;
+      }
+
+      .author-details {
+        flex: 1;
+      }
+
+      .author-name {
+        font-size: 16px;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 4px;
+      }
+
+      .post-time {
+        font-size: 14px;
+        color: #888;
+      }
+
+      .post-stats {
+        display: flex;
+        gap: 15px;
+        font-size: 14px;
+        color: #666;
+      }
+
+      .post-content {
+        font-size: 16px;
+        line-height: 1.8;
+        color: #333;
+      }
+
+      .post-content pre {
+        background: #f8f9fa;
+        border-radius: 6px;
+        padding: 15px;
+        overflow-x: auto;
+        margin: 15px 0;
+        border-left: 4px solid #667eea;
+      }
+
+      .post-content code {
+        font-family: 'Consolas', 'Monaco', monospace;
+        font-size: 14px;
+      }
+
+      .replies-section {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .replies-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #f0f0f0;
+      }
+
+      .replies-header h2 {
+        font-size: 20px;
+        color: #333;
+      }
+
+      .reply-btn {
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background-color 0.3s;
+      }
+
+      .reply-btn:hover {
+        background: #5a6fd8;
+      }
+
+      .reply-item {
+        padding: 20px 0;
+        border-bottom: 1px solid #f0f0f0;
+      }
+
+      .reply-item:last-child {
+        border-bottom: none;
+      }
+
+      .reply-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+      }
+
+      .reply-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        margin-right: 12px;
+        object-fit: cover;
+      }
+
+      .reply-info {
+        flex: 1;
+      }
+
+      .reply-author {
+        font-size: 14px;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 2px;
+      }
+
+      .reply-time {
+        font-size: 12px;
+        color: #888;
+      }
+
+      .reply-floor {
+        font-size: 14px;
+        color: #667eea;
+        font-weight: 600;
+      }
+
+      .reply-content {
+        margin-left: 48px;
+        font-size: 15px;
+        line-height: 1.6;
+        color: #333;
+        margin-bottom: 10px;
+      }
+
+      .reply-actions {
+        margin-left: 48px;
+        display: flex;
+        gap: 15px;
+      }
+
+      .reply-action {
+        background: none;
+        border: none;
+        color: #888;
+        font-size: 13px;
+        cursor: pointer;
+        padding: 4px 8px;
+        border-radius: 4px;
+        transition: all 0.3s;
+      }
+
+      .reply-action:hover {
+        background: #f8f9fa;
+        color: #667eea;
+      }
+
+      .reply-form-section {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .reply-form-section h3 {
+        margin-bottom: 15px;
+        font-size: 18px;
+        color: #333;
+      }
+
+      .reply-textarea {
+        width: 100%;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        padding: 15px;
+        font-size: 14px;
+        font-family: inherit;
+        resize: vertical;
+        margin-bottom: 15px;
+      }
+
+      .reply-textarea:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+      }
+
+      .form-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .form-tips {
+        font-size: 13px;
+        color: #888;
+      }
+
+      .submit-btn {
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        transition: background-color 0.3s;
+      }
+
+      .submit-btn:hover {
+        background: #5a6fd8;
+      }
+
+      .submit-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      @media (max-width: 768px) {
+        .post-detail {
+          padding: 20px;
+        }
+
+        .post-header {
+          flex-direction: column;
+          gap: 15px;
+        }
+
+        .post-actions {
+          align-self: flex-start;
+        }
+
+        .post-author-info {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 10px;
+        }
+
+        .post-stats {
+          align-self: flex-start;
+        }
+      }
+
+      .loading {
+        opacity: 0.6;
+        pointer-events: none;
+      }
+
+      .success-message {
+        background: #d4edda;
+        color: #155724;
+        padding: 10px 15px;
+        border-radius: 4px;
+        margin-bottom: 15px;
+        display: none;
+      }
+
+      .error-message {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 10px 15px;
+        border-radius: 4px;
+        margin-bottom: 15px;
+        display: none;
+      }
+    </style>
+
+    <script>
+      import { ForumAPI, handleAPIError } from '../../../utils/api.js';      // 点赞帖子功能
+      document.querySelectorAll('.like-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const button = btn as HTMLButtonElement;
+          const postId = button.dataset.postId;
+          
+          if (!postId) return;
+          
+          button.disabled = true;
+          button.classList.add('loading');
+          
+          try {
+            const response = await ForumAPI.likePost(parseInt(postId));
+            const currentText = button.textContent || '';
+            const match = currentText.match(/👍 点赞 \((\d+)\)/);
+            const currentLikes = match ? parseInt(match[1]) : 0;
+            button.textContent = `👍 点赞 (${currentLikes + 1})`;
+          } catch (error) {
+            alert('点赞失败：' + handleAPIError(error));
+          } finally {
+            button.disabled = false;
+            button.classList.remove('loading');
+          }
+        });
+      });      // 点赞评论功能
+      document.querySelectorAll('.like-comment-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const button = btn as HTMLButtonElement;
+          const commentId = button.dataset.commentId;
+          
+          if (!commentId) return;
+          
+          button.disabled = true;
+          button.classList.add('loading');
+          
+          try {
+            const response = await ForumAPI.likeComment(parseInt(commentId));
+            const currentText = button.textContent || '';
+            const match = currentText.match(/👍 (\d+)/);
+            const currentLikes = match ? parseInt(match[1]) : 0;
+            button.textContent = `👍 ${currentLikes + 1}`;
+          } catch (error) {
+            alert('点赞失败：' + handleAPIError(error));
+          } finally {
+            button.disabled = false;
+            button.classList.remove('loading');
+          }
+        });
+      });
+
+      // 滚动到回复表单
+      document.getElementById('scrollToReplyForm')?.addEventListener('click', () => {
+        document.getElementById('replyFormSection')?.scrollIntoView({ 
+          behavior: 'smooth' 
+        });
+      });
+
+      // 回复表单提交
+      document.getElementById('replyForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const form = e.target as HTMLFormElement;
+        const formData = new FormData(form);
+        const submitBtn = form.querySelector('.submit-btn') as HTMLButtonElement;
+        const textarea = form.querySelector('.reply-textarea') as HTMLTextAreaElement;
+        
+        // 验证内容
+        const content = formData.get('content') as string;
+        if (!content.trim()) {
+          alert('请输入回复内容');
+          return;
+        }
+        
+        submitBtn.disabled = true;
+        submitBtn.textContent = '发布中...';
+        
+        try {
+          const response = await ForumAPI.createComment({
+            postId: parseInt(formData.get('postId') as string),
+            content: content.trim(),
+            author: '当前用户', // 实际应该从用户登录状态获取
+            authorId: 'current_user',
+            avatar: '/default-avatar.png'
+          });
+          
+          // 显示成功消息
+          alert('回复发布成功！页面将刷新以显示新回复。');
+          
+          // 刷新页面或动态添加新回复
+          window.location.reload();
+          
+        } catch (error) {
+          alert('发布回复失败：' + handleAPIError(error));
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = '发布回复';
+        }
+      });
+    </script>
+  </BaseLayout>
+)}
