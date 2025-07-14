@@ -3,11 +3,11 @@ import { comments, posts, generateId } from '../data/index.js';
 
 const router = express.Router();
 
-// 获取帖子的评论列表
+// 获取帖子的评论列表 (支持层级结构)
 router.get('/post/:postId', (req, res) => {
     try {
         const postId = parseInt(req.params.postId);
-        const { page = 1, limit = 20, sort = 'oldest' } = req.query;
+        const { page = 1, limit = 20, sort = 'oldest', nested = 'false' } = req.query;
 
         // 检查帖子是否存在
         const post = posts.find(p => p.id === postId);
@@ -33,7 +33,56 @@ router.get('/post/:postId', (req, res) => {
                 break;
         }
 
-        // 分页
+        // 如果需要嵌套结构
+        if (nested === 'true') {
+            // 构建评论树结构
+            const commentMap = new Map();
+            const rootComments = [];
+
+            // 首先将所有评论加入map
+            postComments.forEach(comment => {
+                commentMap.set(comment.id, { ...comment, replies: [] });
+            });
+
+            // 构建树结构
+            postComments.forEach(comment => {
+                const commentNode = commentMap.get(comment.id);
+                if (comment.parentId) {
+                    const parent = commentMap.get(comment.parentId);
+                    if (parent) {
+                        parent.replies.push(commentNode);
+                    }
+                } else {
+                    rootComments.push(commentNode);
+                }
+            });
+
+            // 分页（只对根评论进行分页）
+            const startIndex = (page - 1) * limit;
+            const endIndex = startIndex + parseInt(limit);
+            const paginatedComments = rootComments.slice(startIndex, endIndex);
+
+            // 统计信息
+            const stats = {
+                total: rootComments.length,
+                totalComments: postComments.length,
+                page: parseInt(page),
+                limit: parseInt(limit),
+                totalPages: Math.ceil(rootComments.length / limit),
+                hasNext: endIndex < rootComments.length,
+                hasPrev: page > 1
+            };
+
+            return res.json({
+                success: true,
+                data: paginatedComments,
+                pagination: stats,
+                nested: true,
+                timestamp: new Date().toISOString()
+            });
+        }
+
+        // 扁平结构的分页
         const startIndex = (page - 1) * limit;
         const endIndex = startIndex + parseInt(limit);
         const paginatedComments = postComments.slice(startIndex, endIndex);
@@ -52,6 +101,7 @@ router.get('/post/:postId', (req, res) => {
             success: true,
             data: paginatedComments,
             pagination: stats,
+            nested: false,
             timestamp: new Date().toISOString()
         });
 
