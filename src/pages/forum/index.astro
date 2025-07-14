@@ -2,6 +2,9 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { ForumAPI, formatTime } from "../../utils/api.js";
 
+// 确保页面为动态渲染模式
+export const prerender = false;
+
 // 获取分页参数
 const url = new URL(Astro.request.url);
 const currentPage = parseInt(url.searchParams.get("page") || "1");
@@ -38,6 +41,12 @@ try {
     totalPages = pagination.totalPages || 1;
     hasNextPage = pagination.hasNext || false;
     hasPrevPage = pagination.hasPrev || false;
+
+    // 添加调试信息
+    console.log("当前页:", currentPage);
+    console.log("总页数:", totalPages);
+    console.log("帖子数量:", posts.length);
+    console.log("分页信息:", pagination);
 } catch (error) {
     console.error("Failed to fetch forum data:", error);
     // 如果 API 失败，使用备用数据或显示错误信息
@@ -53,6 +62,18 @@ try {
                 <span>总帖数: {stats.totalPosts}</span>
                 <span>今日发帖: {stats.todayPosts}</span>
                 <span>在线用户: 1,234</span>
+            </div>
+            <!-- 调试信息 -->
+            <div
+                class="debug-info"
+                style="background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 5px; font-size: 12px;"
+            >
+                <strong>调试信息:</strong>
+                当前页: {currentPage} | 总页数: {totalPages} | 帖子数: {
+                    posts.length
+                } | 有下一页: {hasNextPage ? "是" : "否"} | 有上一页: {
+                    hasPrevPage ? "是" : "否"
+                }
             </div>
         </div>
 
