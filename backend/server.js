@@ -71,7 +71,7 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, () => {
     console.log(`🚀 论坛后端 API 运行在 http://localhost:${PORT}`);
-    console.log(`📚 API 文档: http://localhost:${PORT}/api/health`);
+    console.log(`📚 API health: http://localhost:${PORT}/api/health`);
 });
 
 export default app;

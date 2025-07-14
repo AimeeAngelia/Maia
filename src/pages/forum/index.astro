@@ -5,10 +5,19 @@ import { ForumAPI, formatTime } from "../../utils/api.js";
 // 确保页面为动态渲染模式
 export const prerender = false;
 
-// 获取分页参数
+// 获取分页和分类参数
 const url = new URL(Astro.request.url);
 const currentPage = parseInt(url.searchParams.get("page") || "1");
+const currentCategory = url.searchParams.get("category") || ""; // 获取分类参数
 const pageSize = 10; // 每页显示的帖子数量
+
+// 生成带分类参数的分页URL的辅助函数
+function createPageUrl(page: number): string {
+    const params = new URLSearchParams();
+    if (page > 1) params.set("page", page.toString());
+    if (currentCategory) params.set("category", currentCategory);
+    return `/forum${params.toString() ? `?${params.toString()}` : ""}`;
+}
 
 // 获取帖子数据和统计信息
 let posts: any[] = [];
@@ -29,6 +38,7 @@ try {
         page: currentPage,
         limit: pageSize,
         sort: "newest",
+        category: currentCategory, // 添加分类参数
     });
     posts = postsResponse.data || [];
     pagination = postsResponse.pagination || {};
@@ -83,11 +93,36 @@ try {
                 <!-- 操作栏 -->
                 <div class="forum-actions">
                     <div class="category-tabs">
-                        <button class="tab active">全部</button>
-                        <button class="tab">题解</button>
-                        <button class="tab">求助</button>
-                        <button class="tab">讨论</button>
-                        <button class="tab">灌水</button>
+                        <button
+                            class={`tab ${currentCategory === "" ? "active" : ""}`}
+                            onclick="filterByCategory('')"
+                        >
+                            全部
+                        </button>
+                        <button
+                            class={`tab ${currentCategory === "题解" ? "active" : ""}`}
+                            onclick="filterByCategory('题解')"
+                        >
+                            题解
+                        </button>
+                        <button
+                            class={`tab ${currentCategory === "求助" ? "active" : ""}`}
+                            onclick="filterByCategory('求助')"
+                        >
+                            求助
+                        </button>
+                        <button
+                            class={`tab ${currentCategory === "讨论" ? "active" : ""}`}
+                            onclick="filterByCategory('讨论')"
+                        >
+                            讨论
+                        </button>
+                        <button
+                            class={`tab ${currentCategory === "灌水" ? "active" : ""}`}
+                            onclick="filterByCategory('灌水')"
+                        >
+                            灌水
+                        </button>
                     </div>
                     <button
                         class="new-post-btn"
@@ -155,7 +190,7 @@ try {
                     {
                         hasPrevPage && (
                             <a
-                                href={`/forum?page=${currentPage - 1}`}
+                                href={createPageUrl(currentPage - 1)}
                                 class="page-btn prev-btn"
                             >
                                 <span class="page-icon">‹</span>
@@ -167,7 +202,7 @@ try {
                         {/* 显示第一页（如果当前页离第一页较远） */}
                         {
                             currentPage > 3 && (
-                                <a href="/forum?page=1" class="page-btn">
+                                <a href={createPageUrl(1)} class="page-btn">
                                     1
                                 </a>
                             )
@@ -182,7 +217,7 @@ try {
                         {
                             currentPage > 2 && (
                                 <a
-                                    href={`/forum?page=${currentPage - 2}`}
+                                    href={createPageUrl(currentPage - 2)}
                                     class="page-btn"
                                 >
                                     {currentPage - 2}
@@ -192,7 +227,7 @@ try {
                         {
                             currentPage > 1 && (
                                 <a
-                                    href={`/forum?page=${currentPage - 1}`}
+                                    href={createPageUrl(currentPage - 1)}
                                     class="page-btn"
                                 >
                                     {currentPage - 1}
@@ -202,7 +237,7 @@ try {
 
                         {/* 当前页 */}
                         <a
-                            href={`/forum?page=${currentPage}`}
+                            href={createPageUrl(currentPage)}
                             class="page-btn active">{currentPage}</a
                         >
 
@@ -210,7 +245,7 @@ try {
                         {
                             currentPage < totalPages && (
                                 <a
-                                    href={`/forum?page=${currentPage + 1}`}
+                                    href={createPageUrl(currentPage + 1)}
                                     class="page-btn"
                                 >
                                     {currentPage + 1}
@@ -220,7 +255,7 @@ try {
                         {
                             currentPage < totalPages - 1 && (
                                 <a
-                                    href={`/forum?page=${currentPage + 2}`}
+                                    href={createPageUrl(currentPage + 2)}
                                     class="page-btn"
                                 >
                                     {currentPage + 2}
@@ -236,7 +271,7 @@ try {
                         {
                             currentPage < totalPages - 2 && (
                                 <a
-                                    href={`/forum?page=${totalPages}`}
+                                    href={createPageUrl(totalPages)}
                                     class="page-btn"
                                 >
                                     {totalPages}
@@ -244,11 +279,10 @@ try {
                             )
                         }
                     </div>
-
                     {
                         hasNextPage && (
                             <a
-                                href={`/forum?page=${currentPage + 1}`}
+                                href={createPageUrl(currentPage + 1)}
                                 class="page-btn next-btn"
                             >
                                 下一页
@@ -545,16 +579,24 @@ try {
             }
         }
     </style>
-    <script define:vars={{ currentPage, totalPages }}>
-        // 分类标签切换功能
-        document.querySelectorAll(".tab").forEach((tab) => {
-            tab.addEventListener("click", () => {
-                document
-                    .querySelectorAll(".tab")
-                    .forEach((t) => t.classList.remove("active"));
-                tab.classList.add("active");
-            });
-        });
+    <script define:vars={{ currentPage, totalPages, currentCategory }}>
+        // 分类筛选功能
+        function filterByCategory(category) {
+            const url = new URLSearchParams(window.location.search);
+
+            // 设置分类参数
+            if (category) {
+                url.set("category", category);
+            } else {
+                url.delete("category");
+            }
+
+            // 重置到第一页
+            url.delete("page");
+
+            // 跳转到新的URL
+            window.location.href = `/forum?${url.toString()}`;
+        }
 
         // 分页跳转功能
         function jumpToPage() {
@@ -564,7 +606,9 @@ try {
             const page = parseInt(pageInput.value);
 
             if (page && page >= 1 && page <= totalPages) {
-                window.location.href = `/forum?page=${page}`;
+                const url = new URLSearchParams(window.location.search);
+                url.set("page", page);
+                window.location.href = `/forum?${url.toString()}`;
             } else {
                 alert(`请输入1到${totalPages}之间的页码`);
                 pageInput.focus();
@@ -583,9 +627,12 @@ try {
 
         // 添加键盘快捷键支持
         document.addEventListener("keydown", function (e) {
+            const url = new URLSearchParams(window.location.search);
+
             // 左箭头键：上一页
             if (e.key === "ArrowLeft" && e.ctrlKey && currentPage > 1) {
-                window.location.href = `/forum?page=${currentPage - 1}`;
+                url.set("page", currentPage - 1);
+                window.location.href = `/forum?${url.toString()}`;
             }
             // 右箭头键：下一页
             else if (
@@ -593,11 +640,13 @@ try {
                 e.ctrlKey &&
                 currentPage < totalPages
             ) {
-                window.location.href = `/forum?page=${currentPage + 1}`;
+                url.set("page", currentPage + 1);
+                window.location.href = `/forum?${url.toString()}`;
             }
         });
 
         // 全局函数声明
         window.jumpToPage = jumpToPage;
+        window.filterByCategory = filterByCategory;
     </script>
 </BaseLayout>
