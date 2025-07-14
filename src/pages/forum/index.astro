@@ -7,6 +7,7 @@ let posts = [];
 let stats = {
     totalPosts: 0,
     todayPosts: 0,
+    yesterdayPosts: 0,
     hotPosts: [],
 };
 
@@ -154,7 +155,9 @@ try {
                         </div>
                         <div class="stat-item">
                             <span class="stat-label">昨日新帖</span>
-                            <span class="stat-value">18</span>
+                            <span class="stat-value"
+                                >{stats.yesterdayPosts || 0}</span
+                            >
                         </div>
                         <div class="stat-item">
                             <span class="stat-label">总帖数</span>

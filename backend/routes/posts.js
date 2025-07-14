@@ -313,13 +313,22 @@ router.get('/stats/overview', (req, res) => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+
         const todayPosts = posts.filter(post =>
             new Date(post.postTime) >= today
         );
 
+        const yesterdayPosts = posts.filter(post => {
+            const postDate = new Date(post.postTime);
+            return postDate >= yesterday && postDate < today;
+        });
+
         const stats = {
             totalPosts: posts.length,
             todayPosts: todayPosts.length,
+            yesterdayPosts: yesterdayPosts.length,
             totalViews: posts.reduce((sum, post) => sum + post.views, 0),
             totalReplies: posts.reduce((sum, post) => sum + post.replies, 0),
             categories: {
