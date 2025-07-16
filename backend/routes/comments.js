@@ -1,349 +1,296 @@
 import express from 'express';
-import { comments, posts, generateId } from '../data/index.js';
+import { commentsDAO, postsDAO } from '../dao/index.js';
 
 const router = express.Router();
 
-// 获取帖子的评论列表 (支持层级结构)
-router.get('/post/:postId', (req, res) => {
+// 获取帖子的评论列表
+router.get('/post/:postId', async (req, res) => {
     try {
         const postId = parseInt(req.params.postId);
-        const { page = 1, limit = 20, sort = 'oldest', nested = 'false' } = req.query;
+        const { page = 1, limit = 20, sort = 'oldest' } = req.query;
 
         // 检查帖子是否存在
-        const post = posts.find(p => p.id === postId);
+        const post = await postsDAO.getPostById(postId);
         if (!post) {
             return res.status(404).json({
                 success: false,
-                error: '帖子不存在'
+                message: '帖子不存在'
             });
         }
 
-        let postComments = comments.filter(comment => comment.postId === postId);
-
-        // 排序
-        switch (sort) {
-            case 'newest':
-                postComments.sort((a, b) => new Date(b.replyTime) - new Date(a.replyTime));
-                break;
-            case 'oldest':
-                postComments.sort((a, b) => new Date(a.replyTime) - new Date(b.replyTime));
-                break;
-            case 'mostLiked':
-                postComments.sort((a, b) => b.likes - a.likes);
-                break;
-        }
-
-        // 如果需要嵌套结构
-        if (nested === 'true') {
-            // 构建评论树结构
-            const commentMap = new Map();
-            const rootComments = [];
-
-            // 首先将所有评论加入map
-            postComments.forEach(comment => {
-                commentMap.set(comment.id, { ...comment, replies: [] });
-            });
-
-            // 构建树结构
-            postComments.forEach(comment => {
-                const commentNode = commentMap.get(comment.id);
-                if (comment.parentId) {
-                    const parent = commentMap.get(comment.parentId);
-                    if (parent) {
-                        parent.replies.push(commentNode);
-                    }
-                } else {
-                    rootComments.push(commentNode);
-                }
-            });
-
-            // 分页（只对根评论进行分页）
-            const startIndex = (page - 1) * limit;
-            const endIndex = startIndex + parseInt(limit);
-            const paginatedComments = rootComments.slice(startIndex, endIndex);
-
-            // 统计信息
-            const stats = {
-                total: rootComments.length,
-                totalComments: postComments.length,
-                page: parseInt(page),
-                limit: parseInt(limit),
-                totalPages: Math.ceil(rootComments.length / limit),
-                hasNext: endIndex < rootComments.length,
-                hasPrev: page > 1
-            };
-
-            return res.json({
-                success: true,
-                data: paginatedComments,
-                pagination: stats,
-                nested: true,
-                timestamp: new Date().toISOString()
-            });
-        }
-
-        // 扁平结构的分页
-        const startIndex = (page - 1) * limit;
-        const endIndex = startIndex + parseInt(limit);
-        const paginatedComments = postComments.slice(startIndex, endIndex);
-
-        // 统计信息
-        const stats = {
-            total: postComments.length,
+        const options = {
             page: parseInt(page),
             limit: parseInt(limit),
-            totalPages: Math.ceil(postComments.length / limit),
-            hasNext: endIndex < postComments.length,
-            hasPrev: page > 1
+            sort
         };
+
+        const result = await commentsDAO.getCommentsByPostId(postId, options);
 
         res.json({
             success: true,
-            data: paginatedComments,
-            pagination: stats,
-            nested: false,
-            timestamp: new Date().toISOString()
+            data: result.comments,
+            pagination: {
+                page: result.page,
+                limit: result.limit,
+                total: result.total,
+                pages: result.pages,
+                hasNext: result.hasNext,
+                hasPrev: result.hasPrev
+            }
         });
-
     } catch (error) {
+        console.error('获取评论失败:', error);
         res.status(500).json({
             success: false,
-            error: '获取评论列表失败',
-            message: error.message
+            message: '获取评论失败'
         });
     }
 });
 
 // 获取单个评论
-router.get('/:id', (req, res) => {
+router.get('/:id', async (req, res) => {
     try {
         const commentId = parseInt(req.params.id);
-        const comment = comments.find(c => c.id === commentId);
+        const comment = await commentsDAO.getCommentById(commentId);
 
         if (!comment) {
             return res.status(404).json({
                 success: false,
-                error: '评论不存在'
+                message: '评论不存在'
             });
         }
 
         res.json({
             success: true,
-            data: comment,
-            timestamp: new Date().toISOString()
+            data: comment
         });
-
     } catch (error) {
+        console.error('获取评论详情失败:', error);
         res.status(500).json({
             success: false,
-            error: '获取评论失败',
-            message: error.message
+            message: '获取评论详情失败'
         });
     }
 });
 
 // 创建新评论
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
     try {
-        const {
-            postId,
-            content,
-            author,
-            authorId,
-            avatar,
-            parentId = null,
-            anonymous = false
-        } = req.body;
+        const { postId, content, author, authorId, avatar, parentId } = req.body;
 
         // 验证必填字段
-        if (!postId || !content || !author) {
+        if (!postId || !content || !author || !authorId) {
             return res.status(400).json({
                 success: false,
-                error: '缺少必填字段',
-                required: ['postId', 'content', 'author']
+                message: '缺少必填字段'
             });
         }
 
         // 检查帖子是否存在
-        const post = posts.find(p => p.id === parseInt(postId));
+        const post = await postsDAO.getPostById(postId);
         if (!post) {
             return res.status(404).json({
                 success: false,
-                error: '帖子不存在'
-            });
-        }
-
-        // 验证内容长度
-        if (content.length > 5000) {
-            return res.status(400).json({
-                success: false,
-                error: '评论内容不能超过5000个字符'
+                message: '帖子不存在'
             });
         }
 
         // 如果是回复评论，检查父评论是否存在
         if (parentId) {
-            const parentComment = comments.find(c => c.id === parseInt(parentId));
+            const parentComment = await commentsDAO.getCommentById(parentId);
             if (!parentComment) {
                 return res.status(404).json({
                     success: false,
-                    error: '被回复的评论不存在'
+                    message: '父评论不存在'
                 });
             }
         }
 
-        // 计算楼层号
-        const postComments = comments.filter(c => c.postId === parseInt(postId));
-        const floor = postComments.length + 1;
-
-        const newComment = {
-            id: generateId(comments),
-            postId: parseInt(postId),
-            content: content.trim(),
-            author: anonymous ? '匿名用户' : author,
-            authorId: anonymous ? 'anonymous' : authorId,
-            avatar: anonymous ? '/default-avatar.png' : avatar,
-            replyTime: new Date().toISOString(),
-            floor,
-            likes: 0,
-            parentId: parentId ? parseInt(parentId) : null,
-            status: 'published'
+        const commentData = {
+            postId,
+            content,
+            author,
+            authorId,
+            avatar: avatar || '/default-avatar.png',
+            parentId: parentId || null
         };
 
-        comments.push(newComment);
+        const commentId = await commentsDAO.createComment(commentData);
+        const newComment = await commentsDAO.getCommentById(commentId);
 
-        // 更新帖子的回复数和最后回复时间
-        post.replies += 1;
-        post.lastReply = new Date().toISOString();
+        // 更新帖子的回复数量
+        await postsDAO.incrementReplies(postId);
 
         res.status(201).json({
             success: true,
             data: newComment,
-            message: '评论发布成功',
-            timestamp: new Date().toISOString()
+            message: '评论创建成功'
         });
-
     } catch (error) {
+        console.error('创建评论失败:', error);
         res.status(500).json({
             success: false,
-            error: '发布评论失败',
-            message: error.message
+            message: '创建评论失败'
         });
     }
 });
 
 // 更新评论
-router.put('/:id', (req, res) => {
+router.put('/:id', async (req, res) => {
     try {
         const commentId = parseInt(req.params.id);
-        const commentIndex = comments.findIndex(c => c.id === commentId);
+        const updateData = req.body;
 
-        if (commentIndex === -1) {
+        const success = await commentsDAO.updateComment(commentId, updateData);
+
+        if (!success) {
             return res.status(404).json({
                 success: false,
-                error: '评论不存在'
+                message: '评论不存在'
             });
         }
 
-        const { content } = req.body;
-
-        if (!content) {
-            return res.status(400).json({
-                success: false,
-                error: '评论内容不能为空'
-            });
-        }
-
-        if (content.length > 5000) {
-            return res.status(400).json({
-                success: false,
-                error: '评论内容不能超过5000个字符'
-            });
-        }
-
-        comments[commentIndex].content = content.trim();
-        comments[commentIndex].lastEditTime = new Date().toISOString();
+        const updatedComment = await commentsDAO.getCommentById(commentId);
 
         res.json({
             success: true,
-            data: comments[commentIndex],
-            message: '评论更新成功',
-            timestamp: new Date().toISOString()
+            data: updatedComment,
+            message: '评论更新成功'
         });
-
     } catch (error) {
+        console.error('更新评论失败:', error);
         res.status(500).json({
             success: false,
-            error: '更新评论失败',
-            message: error.message
-        });
-    }
-});
-
-// 点赞评论
-router.post('/:id/like', (req, res) => {
-    try {
-        const commentId = parseInt(req.params.id);
-        const comment = comments.find(c => c.id === commentId);
-
-        if (!comment) {
-            return res.status(404).json({
-                success: false,
-                error: '评论不存在'
-            });
-        }
-
-        comment.likes += 1;
-
-        res.json({
-            success: true,
-            data: { likes: comment.likes },
-            message: '点赞成功',
-            timestamp: new Date().toISOString()
-        });
-
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            error: '点赞失败',
-            message: error.message
+            message: '更新评论失败'
         });
     }
 });
 
 // 删除评论
-router.delete('/:id', (req, res) => {
+router.delete('/:id', async (req, res) => {
     try {
         const commentId = parseInt(req.params.id);
-        const commentIndex = comments.findIndex(c => c.id === commentId);
 
-        if (commentIndex === -1) {
+        const comment = await commentsDAO.getCommentById(commentId);
+        if (!comment) {
             return res.status(404).json({
                 success: false,
-                error: '评论不存在'
+                message: '评论不存在'
             });
         }
 
-        const deletedComment = comments.splice(commentIndex, 1)[0];
+        const success = await commentsDAO.deleteComment(commentId);
 
-        // 更新帖子的回复数
-        const post = posts.find(p => p.id === deletedComment.postId);
-        if (post) {
-            post.replies = Math.max(0, post.replies - 1);
+        if (!success) {
+            return res.status(500).json({
+                success: false,
+                message: '删除评论失败'
+            });
         }
+
+        // 更新帖子的回复数量
+        await postsDAO.decrementReplies(comment.postId);
 
         res.json({
             success: true,
-            data: deletedComment,
-            message: '评论删除成功',
-            timestamp: new Date().toISOString()
+            message: '评论删除成功'
         });
-
     } catch (error) {
+        console.error('删除评论失败:', error);
         res.status(500).json({
             success: false,
-            error: '删除评论失败',
-            message: error.message
+            message: '删除评论失败'
+        });
+    }
+});
+
+// 点赞评论
+router.post('/:id/like', async (req, res) => {
+    try {
+        const commentId = parseInt(req.params.id);
+        const success = await commentsDAO.incrementLikes(commentId);
+
+        if (!success) {
+            return res.status(404).json({
+                success: false,
+                message: '评论不存在'
+            });
+        }
+
+        const comment = await commentsDAO.getCommentById(commentId);
+        res.json({
+            success: true,
+            data: { likes: comment.likes },
+            message: '点赞成功'
+        });
+    } catch (error) {
+        console.error('点赞失败:', error);
+        res.status(500).json({
+            success: false,
+            message: '点赞失败'
+        });
+    }
+});
+
+// 获取评论的回复
+router.get('/:id/replies', async (req, res) => {
+    try {
+        const commentId = parseInt(req.params.id);
+        const { page = 1, limit = 10, sort = 'oldest' } = req.query;
+
+        const comment = await commentsDAO.getCommentById(commentId);
+        if (!comment) {
+            return res.status(404).json({
+                success: false,
+                message: '评论不存在'
+            });
+        }
+
+        const options = {
+            page: parseInt(page),
+            limit: parseInt(limit),
+            sort
+        };
+
+        const result = await commentsDAO.getCommentReplies(commentId, options);
+
+        res.json({
+            success: true,
+            data: result.comments,
+            pagination: {
+                page: result.page,
+                limit: result.limit,
+                total: result.total,
+                pages: result.pages,
+                hasNext: result.hasNext,
+                hasPrev: result.hasPrev
+            }
+        });
+    } catch (error) {
+        console.error('获取回复失败:', error);
+        res.status(500).json({
+            success: false,
+            message: '获取回复失败'
+        });
+    }
+});
+
+// 获取最新评论
+router.get('/recent/comments', async (req, res) => {
+    try {
+        const { limit = 10 } = req.query;
+
+        const recentComments = await commentsDAO.getRecentComments(parseInt(limit));
+
+        res.json({
+            success: true,
+            data: recentComments
+        });
+    } catch (error) {
+        console.error('获取最新评论失败:', error);
+        res.status(500).json({
+            success: false,
+            message: '获取最新评论失败'
         });
     }
 });

@@ -63,6 +63,7 @@ router.get('/:id', async (req, res) => {
 
         // 增加浏览量
         await postsDAO.incrementViews(postId);
+        post.views = (post.views || 0) + 1;
 
         res.json({
             success: true,
@@ -218,11 +219,11 @@ router.get('/:id/comments', async (req, res) => {
     try {
         const postId = parseInt(req.params.id);
 
-        const result = await commentsDAO.getCommentsByPostId(postId);
+        const comments = await commentsDAO.getCommentsByPostId(postId);
 
         res.json({
             success: true,
-            data: result.comments
+            data: comments
         });
     } catch (error) {
         console.error('获取评论失败:', error);
