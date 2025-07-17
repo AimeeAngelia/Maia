@@ -224,6 +224,66 @@ export class PostsDAO {
             id: post._id
         }));
     }
+
+    // 根据日期范围获取帖子
+    async getPostsByDateRange(startDate, endDate) {
+        const collection = this.getCollection();
+        const posts = await collection
+            .find({
+                postTime: {
+                    $gte: startDate,
+                    $lt: endDate
+                },
+                status: 'published'
+            })
+            .toArray();
+
+        return posts.map(post => ({
+            ...post,
+            id: post._id
+        }));
+    }
+
+    // 获取帖子总数
+    async getTotalPostsCount() {
+        const collection = this.getCollection();
+        return await collection.countDocuments({ status: 'published' });
+    }
+
+    // 获取总浏览量
+    async getTotalViews() {
+        const collection = this.getCollection();
+        const result = await collection.aggregate([
+            { $match: { status: 'published' } },
+            { $group: { _id: null, totalViews: { $sum: '$views' } } }
+        ]).toArray();
+        return result.length > 0 ? result[0].totalViews : 0;
+    }
+
+    // 获取总回复数
+    async getTotalReplies() {
+        const collection = this.getCollection();
+        const result = await collection.aggregate([
+            { $match: { status: 'published' } },
+            { $group: { _id: null, totalReplies: { $sum: '$replies' } } }
+        ]).toArray();
+        return result.length > 0 ? result[0].totalReplies : 0;
+    }
+
+    // 获取分类统计
+    async getCategoriesStats() {
+        const collection = this.getCollection();
+        const result = await collection.aggregate([
+            { $match: { status: 'published' } },
+            { $group: { _id: '$category', count: { $sum: 1 } } }
+        ]).toArray();
+
+        const stats = {};
+        result.forEach(item => {
+            stats[item._id] = item.count;
+        });
+        return stats;
+    }
 }
 
 // 评论数据访问层
@@ -263,29 +323,87 @@ export class CommentsDAO {
         }
 
         const filter = { postId: parseInt(postId), status: 'published' };
-        const total = await collection.countDocuments(filter);
-        const comments = await collection
-            .find(filter)
-            .sort(sortOption)
-            .skip((page - 1) * limit)
-            .limit(limit)
-            .toArray();
 
-        // 转换数据格式
-        const transformedComments = comments.map(comment => ({
-            ...comment,
-            id: comment._id
-        }));
+        if (nested) {
+            // 获取所有评论进行嵌套处理
+            const allComments = await collection
+                .find(filter)
+                .sort(sortOption)
+                .toArray();
 
-        return {
-            comments: transformedComments,
-            total,
-            page: parseInt(page),
-            limit: parseInt(limit),
-            pages: Math.ceil(total / limit),
-            hasNext: page * limit < total,
-            hasPrev: page > 1
-        };
+            // 构建评论树
+            const commentsTree = this.buildCommentsTree(allComments);
+
+            // 对根评论进行分页
+            const rootComments = commentsTree.filter(comment => !comment.parentId);
+            const total = rootComments.length;
+            const startIndex = (page - 1) * limit;
+            const endIndex = startIndex + limit;
+            const paginatedComments = rootComments.slice(startIndex, endIndex);
+
+            return {
+                comments: paginatedComments,
+                total,
+                totalComments: allComments.length,
+                page: parseInt(page),
+                limit: parseInt(limit),
+                pages: Math.ceil(total / limit),
+                hasNext: endIndex < total,
+                hasPrev: page > 1
+            };
+        } else {
+            // 普通分页
+            const total = await collection.countDocuments(filter);
+            const comments = await collection
+                .find(filter)
+                .sort(sortOption)
+                .skip((page - 1) * limit)
+                .limit(limit)
+                .toArray();
+
+            return {
+                comments: comments.map(comment => ({
+                    ...comment,
+                    id: comment._id
+                })),
+                total,
+                page: parseInt(page),
+                limit: parseInt(limit),
+                pages: Math.ceil(total / limit),
+                hasNext: page * limit < total,
+                hasPrev: page > 1
+            };
+        }
+    }
+
+    // 构建评论树结构
+    buildCommentsTree(comments) {
+        const commentMap = new Map();
+        const rootComments = [];
+
+        // 首先将所有评论加入map
+        comments.forEach(comment => {
+            commentMap.set(comment._id, {
+                ...comment,
+                id: comment._id,
+                replies: []
+            });
+        });
+
+        // 构建树结构
+        comments.forEach(comment => {
+            const commentNode = commentMap.get(comment._id);
+            if (comment.parentId) {
+                const parent = commentMap.get(comment.parentId);
+                if (parent) {
+                    parent.replies.push(commentNode);
+                }
+            } else {
+                rootComments.push(commentNode);
+            }
+        });
+
+        return rootComments;
     }
 
     // 根据ID获取单个评论

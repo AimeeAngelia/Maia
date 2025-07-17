@@ -94,7 +94,26 @@ router.post('/', async (req, res) => {
         if (!title || !content || !category || !author || !authorId) {
             return res.status(400).json({
                 success: false,
-                message: '缺少必填字段'
+                message: '缺少必填字段',
+                required: ['title', 'content', 'category', 'author', 'authorId']
+            });
+        }
+
+        // 验证标题长度
+        if (title.length > 100) {
+            return res.status(400).json({
+                success: false,
+                message: '标题长度不能超过100个字符'
+            });
+        }
+
+        // 验证分类
+        const validCategories = ['题解', '求助', '讨论', '灌水'];
+        if (!validCategories.includes(category)) {
+            return res.status(400).json({
+                success: false,
+                message: '无效的分类',
+                validCategories
             });
         }
 
@@ -269,6 +288,64 @@ router.get('/recommended/posts', async (req, res) => {
         res.status(500).json({
             success: false,
             message: '获取推荐帖子失败'
+        });
+    }
+});
+
+// 获取论坛统计信息
+router.get('/stats/overview', async (req, res) => {
+    try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+
+        // 获取今日帖子数量
+        const todayPosts = await postsDAO.getPostsByDateRange(today, new Date());
+
+        // 获取昨日帖子数量
+        const yesterdayPosts = await postsDAO.getPostsByDateRange(yesterday, today);
+
+        // 获取总帖子数
+        const totalPosts = await postsDAO.getTotalPostsCount();
+
+        // 获取总浏览量和回复数
+        const totalViews = await postsDAO.getTotalViews();
+        const totalReplies = await postsDAO.getTotalReplies();
+
+        // 获取分类统计
+        const categoriesStats = await postsDAO.getCategoriesStats();
+
+        // 获取热门帖子
+        const hotPosts = await postsDAO.getHotPosts(5);
+
+        const stats = {
+            totalPosts,
+            todayPosts: todayPosts.length,
+            yesterdayPosts: yesterdayPosts.length,
+            totalViews,
+            totalReplies,
+            categories: categoriesStats,
+            hotPosts: hotPosts.map(post => ({
+                id: post.id,
+                title: post.title,
+                replies: post.replies,
+                views: post.views
+            }))
+        };
+
+        res.json({
+            success: true,
+            data: stats,
+            timestamp: new Date().toISOString()
+        });
+
+    } catch (error) {
+        console.error('获取统计信息失败:', error);
+        res.status(500).json({
+            success: false,
+            message: '获取统计信息失败'
         });
     }
 });

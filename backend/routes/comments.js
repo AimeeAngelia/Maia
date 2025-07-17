@@ -3,11 +3,11 @@ import { commentsDAO, postsDAO } from '../dao/index.js';
 
 const router = express.Router();
 
-// 获取帖子的评论列表
+// 获取帖子的评论列表 (支持层级结构)
 router.get('/post/:postId', async (req, res) => {
     try {
         const postId = parseInt(req.params.postId);
-        const { page = 1, limit = 20, sort = 'oldest' } = req.query;
+        const { page = 1, limit = 20, sort = 'oldest', nested = 'false' } = req.query;
 
         // 检查帖子是否存在
         const post = await postsDAO.getPostById(postId);
@@ -21,7 +21,8 @@ router.get('/post/:postId', async (req, res) => {
         const options = {
             page: parseInt(page),
             limit: parseInt(limit),
-            sort
+            sort,
+            nested: nested === 'true'
         };
 
         const result = await commentsDAO.getCommentsByPostId(postId, options);
@@ -36,7 +37,9 @@ router.get('/post/:postId', async (req, res) => {
                 pages: result.pages,
                 hasNext: result.hasNext,
                 hasPrev: result.hasPrev
-            }
+            },
+            nested: nested === 'true',
+            timestamp: new Date().toISOString()
         });
     } catch (error) {
         console.error('获取评论失败:', error);
@@ -62,7 +65,8 @@ router.get('/:id', async (req, res) => {
 
         res.json({
             success: true,
-            data: comment
+            data: comment,
+            timestamp: new Date().toISOString()
         });
     } catch (error) {
         console.error('获取评论详情失败:', error);
@@ -76,13 +80,30 @@ router.get('/:id', async (req, res) => {
 // 创建新评论
 router.post('/', async (req, res) => {
     try {
-        const { postId, content, author, authorId, avatar, parentId } = req.body;
+        const {
+            postId,
+            content,
+            author,
+            authorId,
+            avatar,
+            parentId,
+            anonymous = false
+        } = req.body;
 
         // 验证必填字段
         if (!postId || !content || !author || !authorId) {
             return res.status(400).json({
                 success: false,
-                message: '缺少必填字段'
+                message: '缺少必填字段',
+                required: ['postId', 'content', 'author', 'authorId']
+            });
+        }
+
+        // 验证内容长度
+        if (content.length > 5000) {
+            return res.status(400).json({
+                success: false,
+                message: '评论内容不能超过5000个字符'
             });
         }
 
@@ -101,17 +122,17 @@ router.post('/', async (req, res) => {
             if (!parentComment) {
                 return res.status(404).json({
                     success: false,
-                    message: '父评论不存在'
+                    message: '被回复的评论不存在'
                 });
             }
         }
 
         const commentData = {
             postId,
-            content,
-            author,
-            authorId,
-            avatar: avatar || '/default-avatar.png',
+            content: content.trim(),
+            author: anonymous ? '匿名用户' : author,
+            authorId: anonymous ? 'anonymous' : authorId,
+            avatar: anonymous ? '/default-avatar.png' : (avatar || '/default-avatar.png'),
             parentId: parentId || null
         };
 
@@ -124,7 +145,8 @@ router.post('/', async (req, res) => {
         res.status(201).json({
             success: true,
             data: newComment,
-            message: '评论创建成功'
+            message: '评论发布成功',
+            timestamp: new Date().toISOString()
         });
     } catch (error) {
         console.error('创建评论失败:', error);
@@ -139,9 +161,23 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
     try {
         const commentId = parseInt(req.params.id);
-        const updateData = req.body;
+        const { content } = req.body;
 
-        const success = await commentsDAO.updateComment(commentId, updateData);
+        if (!content) {
+            return res.status(400).json({
+                success: false,
+                message: '评论内容不能为空'
+            });
+        }
+
+        if (content.length > 5000) {
+            return res.status(400).json({
+                success: false,
+                message: '评论内容不能超过5000个字符'
+            });
+        }
+
+        const success = await commentsDAO.updateComment(commentId, { content: content.trim() });
 
         if (!success) {
             return res.status(404).json({
@@ -155,7 +191,8 @@ router.put('/:id', async (req, res) => {
         res.json({
             success: true,
             data: updatedComment,
-            message: '评论更新成功'
+            message: '评论更新成功',
+            timestamp: new Date().toISOString()
         });
     } catch (error) {
         console.error('更新评论失败:', error);
@@ -193,7 +230,8 @@ router.delete('/:id', async (req, res) => {
 
         res.json({
             success: true,
-            message: '评论删除成功'
+            message: '评论删除成功',
+            timestamp: new Date().toISOString()
         });
     } catch (error) {
         console.error('删除评论失败:', error);
@@ -221,7 +259,8 @@ router.post('/:id/like', async (req, res) => {
         res.json({
             success: true,
             data: { likes: comment.likes },
-            message: '点赞成功'
+            message: '点赞成功',
+            timestamp: new Date().toISOString()
         });
     } catch (error) {
         console.error('点赞失败:', error);
@@ -264,7 +303,8 @@ router.get('/:id/replies', async (req, res) => {
                 pages: result.pages,
                 hasNext: result.hasNext,
                 hasPrev: result.hasPrev
-            }
+            },
+            timestamp: new Date().toISOString()
         });
     } catch (error) {
         console.error('获取回复失败:', error);
@@ -284,7 +324,8 @@ router.get('/recent/comments', async (req, res) => {
 
         res.json({
             success: true,
-            data: recentComments
+            data: recentComments,
+            timestamp: new Date().toISOString()
         });
     } catch (error) {
         console.error('获取最新评论失败:', error);
