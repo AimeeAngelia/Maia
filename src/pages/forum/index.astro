@@ -46,7 +46,7 @@ try {
     // 获取论坛统计
     const statsResponse = await ForumAPI.getForumStats();
     stats = statsResponse.data || stats; // 从分页信息中获取数据
-    totalPages = pagination.totalPages || 1;
+    totalPages = pagination.pages || 1;
     hasNextPage = pagination.hasNext || false;
     hasPrevPage = pagination.hasPrev || false;
 } catch (error) {
@@ -223,14 +223,10 @@ try {
                                     </a>
                                 )
                             }
-
                             {/* 当前页 */}
-                            <a
-                                href={createPageUrl(currentPage)}
-                                class="page-btn active">{currentPage}</a
-                            >
-
-                            {/* 显示当前页后面的页码 */}
+                            <span class="page-btn active">{currentPage}</span>{
+                                /* 显示当前页后面的页码 */
+                            }
                             {
                                 currentPage < totalPages && (
                                     <a
@@ -242,7 +238,7 @@ try {
                                 )
                             }
                             {
-                                currentPage < totalPages - 1 && (
+                                currentPage + 1 < totalPages && (
                                     <a
                                         href={createPageUrl(currentPage + 2)}
                                         class="page-btn"
@@ -293,6 +289,15 @@ try {
                                 pagination.total || stats.totalPosts
                             } 条记录
                         </span>
+                        <!-- 开发模式下显示调试信息 -->
+                        {
+                            import.meta.env.DEV && (
+                                <div style="font-size: 12px; color: #999; margin-top: 5px;">
+                                    Debug: hasNext={hasNextPage}, hasPrev=
+                                    {hasPrevPage}, total={pagination.total}
+                                </div>
+                            )
+                        }
                         <div class="page-jump">
                             <input
                                 type="number"
